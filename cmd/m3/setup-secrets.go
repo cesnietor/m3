@@ -18,17 +18,17 @@ package main
 
 import (
 	"github.com/minio/cli"
-	"github.com/minio/m3/portal"
+	"github.com/minio/m3/cluster"
 )
 
 // list files and folders.
-var portalCmd = cli.Command{
-	Name:   "portal",
-	Usage:  "starts portal",
-	Action: startAPIPortalCmd,
+var setupK8sSecretsCmd = cli.Command{
+	Name:   "secrets",
+	Usage:  "Sets the Kubernetes Deployment secrets",
+	Action: setupK8sSecrets,
 }
 
-func startAPIPortalCmd(ctx *cli.Context) error {
-	portal.InitPortalGRPCServer()
+func setupK8sSecrets(ctx *cli.Context) error {
+	cluster.SetupM3Secrets()
 	return nil
 }

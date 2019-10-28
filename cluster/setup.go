@@ -21,6 +21,7 @@ import (
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
+	common "github.com/minio/m3/common"
 
 	// the postgres driver for go-migrate
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -29,6 +30,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -38,17 +40,19 @@ const (
 // Setups m3 on the kubernetes deployment that we are installed to
 func SetupM3() {
 	fmt.Println("Setting up m3 namespace")
-	SetupM3Namespace()
+	setupM3Namespace()
+	fmt.Println("Setting up m3 secrets")
+	SetupM3Secrets()
 	fmt.Println("setting up nginx")
 	SetupNginxLoadBalancer()
 	fmt.Println("Setting up postgres")
-	SetupPostgres()
+	setupPostgres()
 	fmt.Println("Running Migrations")
 	RunMigrations()
 }
 
-// Setups the namcespace used by the provisioning service
-func SetupM3Namespace() {
+// setupM3Namespace Setups the namespace used by the provisioning service
+func setupM3Namespace() {
 	// creates the clientset
 	clientset, err := k8sClient()
 	if err != nil {
@@ -67,8 +71,37 @@ func SetupM3Namespace() {
 	}
 }
 
-// Setups a postgres used by the provisioning service
-func SetupPostgres() {
+// SetupM3Secrets creates a kubernetes secrets
+func SetupM3Secrets() {
+	config := getConfig()
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	// Create secret for JWT key for rest api
+	secret := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "jwtkey",
+		},
+		Data: map[string][]byte{
+			"M3_JWT_KEY": []byte(common.GetRandString(64, "default")),
+		},
+	}
+	res, err := clientset.CoreV1().Secrets("default").Create(&secret)
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	if res.Name == "" {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+}
+
+// setupPostgres sets up a postgres used by the provisioning service
+func setupPostgres() {
 	// creates the clientset
 	clientset, err := k8sClient()
 	if err != nil {
@@ -119,7 +152,7 @@ func SetupPostgres() {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println("done with postgres secrets")
+	fmt.Println("done with postgres config maps")
 	fmt.Println(resSecret.String())
 
 	var replicas int32 = 1

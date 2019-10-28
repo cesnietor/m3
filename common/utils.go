@@ -14,21 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package common
 
 import (
-	"github.com/minio/cli"
-	"github.com/minio/m3/portal"
+	"crypto/rand"
+	"crypto/sha256"
+
+	"encoding/base64"
+	"fmt"
 )
 
-// list files and folders.
-var portalCmd = cli.Command{
-	Name:   "portal",
-	Usage:  "starts portal",
-	Action: startAPIPortalCmd,
-}
+// GetRandString generates a random string with the defined size length
+func GetRandString(size int, method string) string {
+	rb := make([]byte, size)
+	_, err := rand.Read(rb)
 
-func startAPIPortalCmd(ctx *cli.Context) error {
-	portal.InitPortalGRPCServer()
-	return nil
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	randStr := base64.URLEncoding.EncodeToString(rb)
+	if method == "sha256" {
+		h := sha256.New()
+		h.Write([]byte(randStr))
+		randStr = fmt.Sprintf("%x", h.Sum(nil))
+	}
+	return randStr
 }

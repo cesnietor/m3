@@ -27,7 +27,7 @@ var setupCmd = cli.Command{
 	Usage:  "Setups the m3 cluster",
 	Action: setupDefCmd,
 	Subcommands: []cli.Command{
-		setupDbCmd,
+		setupDbCmd, setupK8sSecretsCmd,
 	},
 }
 
