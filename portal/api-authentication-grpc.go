@@ -97,18 +97,26 @@ func (s *server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRespo
 	// Create Credentials
 	// TODO: validate credentials: username->email, tenant->shortname?
 	var res pb.LoginResponse
-	tenant := in.GetCompany()
+	tenantName := in.GetCompany()
 	email := in.GetEmail()
 	pwd := in.GetPassword()
 
+	// Search for the tenant on the database
+	tenant, err := getTenant(tenantName)
+	if err != nil {
+		res.Error = err.Error()
+		return &res, err
+	}
+	fmt.Println("Tenant: ", tenant.Name, tenant.ID)
+
 	// Password validation
-	user, ok := getUser(tenant, email)
+	user, err := getUser(tenant.Name, email)
 	// If a password exists for the given user
 	// AND, if it is the same as the password we received, then we can move ahead
 	expectedPwd := user.Password
 	// TODO: password will come not hashed and stored hashed so we need to hash it and compare it against db
-	if !ok || expectedPwd != pwd {
-		err := errors.New("Wrong tenant, email or password")
+	if err != nil || expectedPwd != pwd {
+		err = errors.New("Wrong tenant, email or password")
 		res.Error = err.Error()
 		return &res, err
 	}
@@ -130,12 +138,12 @@ func (s *server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRespo
 
 	query :=
 		`INSERT INTO
-				m3.provisioning.sessions ("id","user_id", "occurred_at")
+				m3.provisioning.sessions ("id","user_id", "tenant_id", "occurred_at")
 			  VALUES
 				($1,$2,$3)`
 
 	// Execute Query
-	_, err = loginCtx.Tx.Exec(query, sessionID, userID, time.Now())
+	_, err = loginCtx.Tx.Exec(query, sessionID, userID, tenant.ID, time.Now())
 	if err != nil {
 		tx.Rollback()
 		res.Error = err.Error()
@@ -211,21 +219,21 @@ func webTokenCallback(jwtToken *jwtgo.Token) (interface{}, error) {
 
 // getUser searches for the user in the defined tenant's database
 // and returns the User if it was found
-func getUser(tenant string, email string) (user User, ok bool) {
+func getUser(tenantName string, email string) (user User, err error) {
 
 	bgCtx := context.Background()
-	db := cluster.GetInstance().GetTenantDB(tenant)
+	db := cluster.GetInstance().GetTenantDB(tenantName)
 
 	tx, err := db.BeginTx(bgCtx, nil)
 	if err != nil {
 		tx.Rollback()
-		return user, false
+		return user, err
 	}
 	loginCtx := cluster.NewContext(bgCtx, tx)
 
 	// Get user from tenants database
 	var userEmail string
-	quoted := pq.QuoteIdentifier(tenant)
+	quoted := pq.QuoteIdentifier(tenantName)
 	queryUser := fmt.Sprintf(`
 		SELECT 
 				t1.id, t1.email, t1.password
@@ -238,13 +246,51 @@ func getUser(tenant string, email string) (user User, ok bool) {
 	err = row.Scan(&user.UUID, &userEmail, &user.Password)
 	if err != nil {
 		tx.Rollback()
-		return user, false
+		return user, err
 	}
 
 	// if no error happened to this point commit transaction
 	err = loginCtx.Tx.Commit()
 	if err != nil {
-		return user, false
+		return user, err
 	}
-	return user, true
+	return user, nil
+}
+
+// getTenant gets the Tenant if it exists on the m3.provisining.tenants table
+// search is done by tenant name
+func getTenant(tenantName string) (tenant cluster.Tenant, err error) {
+	fmt.Println("getTenant")
+	bgCtx := context.Background()
+	db := cluster.GetInstance().Db
+
+	tx, err := db.BeginTx(bgCtx, nil)
+	if err != nil {
+		tx.Rollback()
+		return tenant, err
+	}
+	loginCtx := cluster.NewContext(bgCtx, tx)
+	fmt.Println(tenantName)
+	query :=
+		`SELECT 
+				t1.id, t1.name, t1.short_name
+			FROM 
+				m3.provisioning.tenants t1
+			WHERE name=$1`
+	row := loginCtx.Tx.QueryRow(query, tenantName)
+
+	// Save the resulted query on the User struct
+	err = row.Scan(&tenant.ID, &tenant.Name, &tenant.ShortName)
+	if err != nil {
+		fmt.Println(err.Error)
+		tx.Rollback()
+		return tenant, err
+	}
+
+	// if no error happened to this point commit transaction
+	err = loginCtx.Tx.Commit()
+	if err != nil {
+		return tenant, err
+	}
+	return tenant, nil
 }
