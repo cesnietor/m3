@@ -261,7 +261,6 @@ func getUser(tenantName string, email string) (user User, err error) {
 // getTenant gets the Tenant if it exists on the m3.provisining.tenants table
 // search is done by tenant name
 func getTenant(tenantName string) (tenant cluster.Tenant, err error) {
-	fmt.Println("getTenant")
 	bgCtx := context.Background()
 	db := cluster.GetInstance().Db
 
@@ -271,7 +270,6 @@ func getTenant(tenantName string) (tenant cluster.Tenant, err error) {
 		return tenant, err
 	}
 	loginCtx := cluster.NewContext(bgCtx, tx)
-	fmt.Println(tenantName)
 	query :=
 		`SELECT 
 				t1.id, t1.name, t1.short_name
