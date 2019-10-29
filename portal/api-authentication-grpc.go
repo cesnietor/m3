@@ -104,6 +104,7 @@ func (s *server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRespo
 	// Search for the tenant on the database
 	tenant, err := getTenant(tenantName)
 	if err != nil {
+		err = errors.New("Tenant not valid")
 		res.Error = err.Error()
 		return &res, err
 	}
@@ -140,7 +141,7 @@ func (s *server) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginRespo
 		`INSERT INTO
 				m3.provisioning.sessions ("id","user_id", "tenant_id", "occurred_at")
 			  VALUES
-				($1,$2,$3)`
+				($1,$2,$3,$4)`
 
 	// Execute Query
 	_, err = loginCtx.Tx.Exec(query, sessionID, userID, tenant.ID, time.Now())
@@ -282,7 +283,6 @@ func getTenant(tenantName string) (tenant cluster.Tenant, err error) {
 	// Save the resulted query on the User struct
 	err = row.Scan(&tenant.ID, &tenant.Name, &tenant.ShortName)
 	if err != nil {
-		fmt.Println(err.Error)
 		tx.Rollback()
 		return tenant, err
 	}

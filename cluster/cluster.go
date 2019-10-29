@@ -651,6 +651,9 @@ func ReDeployStorageGroup(ctx *Context, sg *StorageGroup) chan error {
 					return
 				}
 			}
+			// Temporary time to wait for full delete
+			time.Sleep(5 * time.Second)
+
 			err = CreateDeploymentWithTenants(
 				tenants,
 				sg,
@@ -689,12 +692,14 @@ func ReDeployNginxResolver(ctx *Context) chan error {
 		}
 		// if the deployment exist, delete FOR NOW
 		if res.Name != "" {
+			fmt.Println("deleting nginx Deployment")
 			err = extV1beta1API(clientset).Deployments("default").Delete("nginx-resolver", nil)
 			if err != nil {
 				ch <- err
 				return
 			}
 		}
+		time.Sleep(5 * time.Second)
 		DeployNginxResolver()
 	}()
 	return ch
