@@ -36,13 +36,12 @@ import (
 )
 
 type Tenant struct {
-	ID             uuid.UUID
-	Name           string
-	ShortName      string
-	Domain         string
-	Enabled        bool
-	Available      bool
-	CostMultiplier float32
+	ID        uuid.UUID
+	Name      string
+	ShortName string
+	Domain    string
+	Enabled   bool
+	Available bool
 }
 
 type AddTenantResult struct {
@@ -1014,26 +1013,6 @@ func UnClaimTenant(ctx *Context, tenant *Tenant) error {
 	}
 	_, err = tx.Exec(query, tenant.ShortName, tenant.ShortName, tenant.ID)
 	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func UpdateTenantCost(ctx *Context, tenantID *uuid.UUID, costMultiplier float32) error {
-	tx, err := ctx.MainTx()
-	if err != nil {
-		return err
-	}
-	// create the bucket registry
-	query :=
-		`UPDATE 
-			tenants
-		SET
-			cost_multiplier=$2
-		WHERE 
-			id=$1`
-
-	if _, err = tx.Exec(query, tenantID, costMultiplier); err != nil {
 		return err
 	}
 	return nil

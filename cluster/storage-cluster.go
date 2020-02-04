@@ -328,7 +328,6 @@ func GetListOfTenantsForStorageGroup(ctx *Context, sg *StorageGroup) chan []*Sto
 			       t2.name,
 			       t2.short_name,
 			       t2.enabled,
-			       t2.cost_multiplier,
 			       t2.available,
 			       t2.domain
 			FROM
@@ -358,7 +357,6 @@ func GetListOfTenantsForStorageGroup(ctx *Context, sg *StorageGroup) chan []*Sto
 				&tenant.Name,
 				&tenant.ShortName,
 				&tenant.Enabled,
-				&tenant.CostMultiplier,
 				&tenant.Available,
 				&tenant.Domain,
 			)
