@@ -26,6 +26,7 @@ MAINTAINER MinIO Development "dev@min.io"
 EXPOSE 9009
 
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=0 /go/src/github.com/minio/m3/fakeapi ./fakeapi
 COPY --from=0 /go/src/github.com/minio/m3/m3 .
 
 CMD ["/m3","controller"]

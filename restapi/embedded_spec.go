@@ -51,6 +51,37 @@ func init() {
   },
   "basePath": "/api/v1",
   "paths": {
+    "/namespaces/{namespace}/storage-pools-info": {
+      "get": {
+        "tags": [
+          "AdminAPI"
+        ],
+        "summary": "Get info of all StoragePools by type",
+        "operationId": "GetStoragePoolsInfo",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/storagePoolsInfo"
+            }
+          },
+          "default": {
+            "description": "Generic error response.",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/namespaces/{namespace}/tenants": {
       "get": {
         "tags": [
@@ -407,6 +438,57 @@ func init() {
         "type": "string"
       }
     },
+    "storagePool": {
+      "type": "object",
+      "properties": {
+        "freeSpace": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storageClasses": {
+          "type": "object",
+          "$ref": "#/definitions/storageClasses"
+        },
+        "totalSpace": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "storagePoolType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "storagePools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/storagePool"
+          }
+        }
+      }
+    },
+    "storagePoolsInfo": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/storagePoolType"
+          }
+        }
+      }
+    },
     "tenant": {
       "type": "object",
       "properties": {
@@ -526,6 +608,37 @@ func init() {
   },
   "basePath": "/api/v1",
   "paths": {
+    "/namespaces/{namespace}/storage-pools-info": {
+      "get": {
+        "tags": [
+          "AdminAPI"
+        ],
+        "summary": "Get info of all StoragePools by type",
+        "operationId": "GetStoragePoolsInfo",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/storagePoolsInfo"
+            }
+          },
+          "default": {
+            "description": "Generic error response.",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
     "/namespaces/{namespace}/tenants": {
       "get": {
         "tags": [
@@ -894,6 +1007,57 @@ func init() {
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "storagePool": {
+      "type": "object",
+      "properties": {
+        "freeSpace": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storageClasses": {
+          "type": "object",
+          "$ref": "#/definitions/storageClasses"
+        },
+        "totalSpace": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "storagePoolType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "storagePools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/storagePool"
+          }
+        }
+      }
+    },
+    "storagePoolsInfo": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/storagePoolType"
+          }
+        }
       }
     },
     "tenant": {

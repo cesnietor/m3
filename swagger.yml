@@ -176,6 +176,27 @@ paths:
       tags:
         - AdminAPI
 
+  /namespaces/{namespace}/storage-pools-info:
+    get:
+      summary: Get info of all StoragePools by type
+      operationId: GetStoragePoolsInfo
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: A successful response.
+          schema:
+            $ref: "#/definitions/storagePoolsInfo"
+        default:
+          description: Generic error response.
+          schema:
+            $ref: "#/definitions/error"
+      tags:
+        - AdminAPI
+
   /storage-classes:
     get:
       summary: List Storage Classes
@@ -310,6 +331,43 @@ definitions:
     type: array
     items:
       type: string
+
+  storagePoolsInfo:
+    type: object
+    properties:
+      types:
+        type: array
+        items:
+          $ref: "#/definitions/storagePoolType"
+
+  storagePoolType:
+    type: object
+    properties:
+      name:
+        type: string
+      storagePools:
+        type: array
+        items:
+          $ref: "#/definitions/storagePool"
+
+  storagePool:
+    type: object
+    properties:
+      name:
+        type: string
+      nodes:
+        type: array
+        items:
+          type: string
+      storageClasses:
+        type: object
+        $ref: "#/definitions/storageClasses"
+      freeSpace:
+        type: integer
+        format: int64
+      totalSpace:
+        type: integer
+        format: int64
 
   error:
     type: object

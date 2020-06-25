@@ -67,6 +67,9 @@ func NewM3API(spec *loads.Document) *M3API {
 		AdminAPIDeleteTenantHandler: admin_api.DeleteTenantHandlerFunc(func(params admin_api.DeleteTenantParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation admin_api.DeleteTenant has not yet been implemented")
 		}),
+		AdminAPIGetStoragePoolsInfoHandler: admin_api.GetStoragePoolsInfoHandlerFunc(func(params admin_api.GetStoragePoolsInfoParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation admin_api.GetStoragePoolsInfo has not yet been implemented")
+		}),
 		AdminAPIListAllTenantsHandler: admin_api.ListAllTenantsHandlerFunc(func(params admin_api.ListAllTenantsParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation admin_api.ListAllTenants has not yet been implemented")
 		}),
@@ -132,6 +135,8 @@ type M3API struct {
 	AdminAPICreateTenantHandler admin_api.CreateTenantHandler
 	// AdminAPIDeleteTenantHandler sets the operation handler for the delete tenant operation
 	AdminAPIDeleteTenantHandler admin_api.DeleteTenantHandler
+	// AdminAPIGetStoragePoolsInfoHandler sets the operation handler for the get storage pools info operation
+	AdminAPIGetStoragePoolsInfoHandler admin_api.GetStoragePoolsInfoHandler
 	// AdminAPIListAllTenantsHandler sets the operation handler for the list all tenants operation
 	AdminAPIListAllTenantsHandler admin_api.ListAllTenantsHandler
 	// AdminAPIListStorageClassesHandler sets the operation handler for the list storage classes operation
@@ -217,6 +222,9 @@ func (o *M3API) Validate() error {
 	}
 	if o.AdminAPIDeleteTenantHandler == nil {
 		unregistered = append(unregistered, "admin_api.DeleteTenantHandler")
+	}
+	if o.AdminAPIGetStoragePoolsInfoHandler == nil {
+		unregistered = append(unregistered, "admin_api.GetStoragePoolsInfoHandler")
 	}
 	if o.AdminAPIListAllTenantsHandler == nil {
 		unregistered = append(unregistered, "admin_api.ListAllTenantsHandler")
@@ -339,6 +347,10 @@ func (o *M3API) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/namespaces/{namespace}/tenants/{tenant}"] = admin_api.NewDeleteTenant(o.context, o.AdminAPIDeleteTenantHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/namespaces/{namespace}/storage-pools-info"] = admin_api.NewGetStoragePoolsInfo(o.context, o.AdminAPIGetStoragePoolsInfoHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
